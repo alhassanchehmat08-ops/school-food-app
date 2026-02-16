@@ -29,6 +29,16 @@ export default async function AdminPage() {
     include: { items: true },
     orderBy: { createdAt: "desc" },
   });
+const VALID_STATUSES = ["PENDING", "PREPARING", "READY", "COMPLETED", "CANCELLED"] as const;
+type OrderStatus = (typeof VALID_STATUSES)[number];
 
-  return <AdminDashboard initialOrders={orders} />;
+function toOrderStatus(status: string): OrderStatus {
+  return (VALID_STATUSES as readonly string[]).includes(status) ? (status as OrderStatus) : "PENDING";
+}
+
+const normalizedOrders = orders.map((o) => ({
+  ...o,
+  status: toOrderStatus(o.status),
+}));
+ return <AdminDashboard initialOrders={normalizedOrders} />;
 }

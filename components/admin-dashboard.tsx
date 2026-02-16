@@ -1,26 +1,29 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Order, OrderItem, OrderStatus } from "@prisma/client";
+import type { Order, OrderItem } from "@prisma/client";
 
-type AdminOrder = Order & { items: OrderItem[] };
+const VALID_STATUSES = ["PENDING", "PREPARING", "READY", "COMPLETED", "CANCELLED"] as const;
+type OrderStatus = (typeof VALID_STATUSES)[number];
 
-const statusOptions: OrderStatus[] = ["PENDING", "PREPARING", "READY", "COMPLETED", "CANCELLED"];
+type AdminOrder = Omit<Order, "status"> & { status: OrderStatus; items: OrderItem[] };
 
-const labelMap: Record<OrderStatus, string> = {
-  PENDING: "Pending",
-  PREPARING: "Preparing",
-  READY: "Ready",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
+const statusOptions: OrderStatus[] = [...VALID_STATUSES];
 
 const actionMap: Record<OrderStatus, OrderStatus[]> = {
-  PENDING: ["PREPARING", "READY", "COMPLETED", "CANCELLED"],
-  PREPARING: ["READY", "COMPLETED", "CANCELLED"],
+  PENDING: ["PREPARING", "CANCELLED"],
+  PREPARING: ["READY", "CANCELLED"],
   READY: ["COMPLETED", "CANCELLED"],
   COMPLETED: [],
   CANCELLED: [],
+};
+
+const labelMap: Record<OrderStatus, string> = {
+  PENDING: "Preparing",
+  PREPARING: "Ready",
+  READY: "Completed",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
 export function AdminDashboard({ initialOrders }: { initialOrders: AdminOrder[] }) {

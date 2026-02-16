@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ADMIN_COOKIE_NAME } from "@/lib/constants";
 
+const VALID_STATUSES = ["PENDING", "PREPARING", "READY", "COMPLETED", "CANCELLED"] as const;
+type OrderStatus = (typeof VALID_STATUSES)[number];
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   const authCookie = cookies().get(ADMIN_COOKIE_NAME);
 
@@ -11,12 +12,12 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json()) as { status?: OrderStatus };
-  const status = body.status;
+ const body = (await request.json()) as { status?: string };
+const status = body.status as OrderStatus | undefined;
 
-  if (!status || !Object.values(OrderStatus).includes(status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-  }
+if (!status || !VALID_STATUSES.includes(status)) {
+  return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+}
 
   const orderId = Number(params.id);
   if (Number.isNaN(orderId)) {

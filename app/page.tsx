@@ -7,5 +7,20 @@ export default async function Home() {
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 
-  return <ShopPage products={products.map((p) => ({ ...p, price: p.price.toString() }))} />;
+  const VALID_CATEGORIES = ["NOODLES", "SNACKS", "DRINKS", "OTHER"] as const;
+type ProductCategory = (typeof VALID_CATEGORIES)[number];
+
+function toCategory(value: string): ProductCategory {
+  return (VALID_CATEGORIES as readonly string[]).includes(value) ? (value as ProductCategory) : "OTHER";
+}
+
+return (
+  <ShopPage
+    products={products.map((p) => ({
+      ...p,
+      price: p.price.toString(),
+      category: toCategory(p.category),
+    }))}
+  />
+);
 }

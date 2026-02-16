@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Product, ProductCategory } from "@prisma/client";
+import type { Product } from "@prisma/client";
 import { useRouter } from "next/navigation";
-
-type ProductWithPrice = Omit<Product, "price"> & { price: string };
+type ProductCategory = "NOODLES" | "SNACKS" | "DRINKS" | "OTHER";
+type ProductWithPrice = Omit<Product, "price" | "category"> & {
+  price: string;
+  category: ProductCategory;
+};
 
 type CartState = Record<number, { product: ProductWithPrice; quantity: number }>;
 
@@ -16,6 +19,12 @@ const categoryLabels: Record<ProductCategory, string> = {
 };
 
 export function ShopPage({ products }: { products: ProductWithPrice[] }) {
+  function toCategory(value: string): ProductCategory {
+  if (value === "NOODLES" || value === "SNACKS" || value === "DRINKS") {
+    return value;
+  }
+  return "OTHER";
+}
   const [cart, setCart] = useState<CartState>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +33,7 @@ export function ShopPage({ products }: { products: ProductWithPrice[] }) {
 
   const groupedProducts = useMemo(() => {
     return products.reduce<Record<string, ProductWithPrice[]>>((acc, product) => {
-      const key = product.category;
+      const key = toCategory(product.category);
       if (!acc[key]) {
         acc[key] = [];
       }
